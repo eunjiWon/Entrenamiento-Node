@@ -1,0 +1,161 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/iron-form/iron-form.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../bower_components/paper-toast/paper-toast.html">
+<link rel="import" href="../bower_components/paper-spinner/paper-spinner.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../bower_components/app-route/app-location.html">
+<link rel="import" href="../bower_components/app-route/app-route.html">
+<link rel="import" href="../bower_components/iron-pages/iron-pages.html">
+<link rel="import" href="../bower_components/iron-selector/iron-selector.html">
+<link rel="import" href="../bower_components/iron-localstorage/iron-localstorage.html">
+
+<dom-module id=login-user>
+    <style>
+      :host{
+        display: block;
+        text-align: center; 
+      }
+      paper-card{
+        width: 35%px;
+        margin-top: 75px;
+        text-align: left;
+        padding: 0 1em 1em 1em;
+      }
+      paper-card .card-actions{
+        padding-top: 500px;
+        text-align: center;
+      }
+      paper-button{
+        background: green;
+        color: white;
+      }
+    </style>
+    <template>
+    <app-location route="{{route}}"></app-location>
+    <app-route id="appRoute"
+        route="{{route}}"
+        pattern="/:page"
+        data="{{routeData}}"
+        tail="{{subroute}}"></app-route>
+        <paper-card image="/images/logo.jpg" elevation="1" animated shadow="false">
+            <div>
+            </div>
+            <form is="iron-form" id="formUser">
+                <div class="card-content">
+                    <paper-input id="userLogin" required name="userLogin" label="Usuario" pattern="[a-z0-9]{3,40}" error-message="Debe tener al menos 3 caracteres alfabéticos en minúsculas, sin espacios en blancos">
+                    </paper-input>
+                    <div style="{{styleValidation}}">Debe tener al menos 3 caracteres alfabéticos en minúsculas, sin espacios en blancos</div>
+                    <paper-input id="password" required name="password" label="Contraseña" type="password"  pattern="[a-z0-9]{3,40}" error-message="Debe tener al menos 3 caracteres alfabéticos en minúsculas, sin espacios en blancos"></paper-input>
+                    <div style="{{styleValidation}}">Debe tener al menos 3 caracteres alfabéticos en minúsculas, sin espacios en blancos</div>
+                </div>
+                <div class="card-actions">
+                    <paper-button type="submit" id="buttLoggin">Aceptar</paper-button>
+                        <iron-ajax
+                            id="idAjaxUser"
+                            method = "POST"
+                            url="http://192.168.1.7:9260/login"
+                            content-type="application/json"
+                            handle-as="json"
+                            loading = "{{cargando}}"
+                            on-response="userResponse">
+                        </iron-ajax>
+                    <paper-button on-click="clearInputs">Cancelar</paper-button>  
+                </div>    
+            </form>
+        </paper-card>
+          <paper-spinner active="[[cargando]]"></paper-spinner>
+          <paper-toast id="toast" text="Usuario y/o contraseña incorrecto"></paper-toast>
+          <a id="redirect" href="/my-appss.html"></a>
+    </template>
+    <script>
+      Polymer({
+        is : "login-user",
+        properties : {
+            usuario : {
+                type : String
+            },
+            route: {
+                type: Object,
+                notify:true
+            },
+            data: {
+                type: Object,
+                notify:true,
+                value: function() {
+                    return {
+                        page: 'login'
+                    };
+                }
+            },
+            styleValidation : {
+                type : String,
+                value : "display:none"
+            }
+
+        },
+        observers: ['_onRoutePathChanged(route.path)'],
+        _onRoutePathChanged: function(path) {
+                if (!path) {
+                    this.set('route.path', 'login');
+                }else if(path != this.data.page){
+                    this.set('data.page', path);
+                }
+            },ready : function(){
+
+                this.$.buttLoggin.addEventListener("click",(evt)=>{
+                     this.$.formUser.submit();
+                    var patt = new RegExp("[a-z0-9]{3,40}");
+                    var respUser = patt.test(this.$.userLogin.value);
+                    var respPassword = patt.test(this.$.password.value);
+                    if(respUser && respPassword){
+                        this.$.idAjaxUser.body = {
+                            username:this.$.userLogin.value,
+                            password: this.$.password.value
+                        }
+                    this.$.idAjaxUser.generateRequest();
+                    }
+                });
+            }
+            ,
+        _setAjax: function () {
+          this.$.formUser.submit();
+          this.$.idAjaxUser.body = {
+            username:this.$.userLogin.value,
+            password: this.$.password.value
+          }
+          this.$.idAjaxUser.generateRequest();
+        },
+        userResponse : function(e,request) {
+          if(typeof(request.response.data[0]) == "object"){
+            app.logged = true;
+            this.$.userLogin.value= "";
+            this.$.password.value = "";
+            this.userLoged = request.response.data;
+            localStorage.setItem("logged", true);
+           this.set('route.path', '/main');
+          }
+          else if(request.response.data == 2){
+            this.$.toast.show();
+          }
+        },
+        clearInputs : function(){
+          this.$.userLogin.value = "";
+          this.$.password.value = "";
+        }
+      });
+    </script>
+</dom-module>

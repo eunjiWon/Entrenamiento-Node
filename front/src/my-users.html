@@ -1,0 +1,602 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../bower_components/paper-spinner/paper-spinner.html">
+<link rel="import" href="../bower_components/paper-drawer-panel/paper-drawer-panel.html">
+<link rel="import" href="../bower_components/paper-fab/paper-fab.html">
+<link rel="import" href="../bower_components/iron-data-table/iron-data-table.html">
+<link rel="import" href="../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel="import" href="../bower_components/paper-toast/paper-toast.html">
+<link rel="import" href="../bower_components/iron-data-table/default-styles.html">
+<link rel="import" href="../bower_components/iron-dropdown/iron-dropdown.html">
+<link rel="import" href="../bower_components/iron-icon/iron-icon.html">
+<link rel="import" href="../bower_components/iron-localstorage/iron-localstorage.html">
+
+
+
+
+<link rel="import" href="../bower_components/app-route/app-location.html">
+<link rel="import" href="../bower_components/app-route/app-route.html">
+
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="my-users">
+  <template>
+    <style include="shared-styles">
+      :host {
+        display: block;
+        --app-primary-color: #4285f4;
+        --app-secondary-color: black;
+        padding: 10px;
+      }
+      #addUser{
+        float: right;
+        padding: 1%;
+
+      }
+      app-header {
+        color: #fff;
+        background-color: red!important;
+      }
+      app-header paper-icon-button {
+        --paper-icon-button-ink-color: white;
+      }
+    #contentContainer {
+        background: red;
+    }
+
+
+      .drawer-list {
+        margin: 0 20px;
+      }
+
+      .drawer-list a {
+        display: block;
+        padding: 0 16px;
+        text-decoration: none;
+        color: var(--app-secondary-color);
+        line-height: 40px;
+      }
+
+      .drawer-list a.iron-selected {
+        color: black;
+        font-weight: bold;
+      }
+      .line{
+       border-top: solid 1px;
+       text-align: right;
+      }
+      #logo{
+        margin: 15% 15% 10% 30%;
+      }
+      paper-fab{
+        margin: 1%;
+        float: right;
+        background: green;
+      }
+      paper-dialog{
+        width: 35%;
+        height: 500px;
+      }
+      form paper-input{
+        padding: 0 10%;
+      }
+      paper-dropdown-menu{
+        text-align: center;
+        padding: 0 10%;
+        width: 80%;
+      }
+      .buttons{
+        text-align: center;
+      }
+      #toast{
+        margin-left: 35%;
+        width: 25%;
+      }
+      paper-icon-button{
+        float: right;
+      }
+      .toastStyle{
+        margin-left: 45%;
+
+      }
+      #toastErrMod {
+        margin-left: 25%;
+      }
+      .buttons{
+        width: 60%;
+      }
+      #cmb{
+        width: 80%;
+        background: rgba(0,128,0,.5);
+         margin-left: 10%;
+        border-radius: 7px 5px;
+        text-align: center;
+        margin-top: 4%;
+      }
+      #showMenu{
+        background: rgba(0,128,0,1);
+        left: 36%;
+        top: 90%;
+        width: 28%;
+      }
+      #showMenu paper-button {
+        width: 100%;
+        margin: 0;
+      }
+      #showMenu paper-button:hover{
+          background: rgba(0,128,0,.5);
+      }
+      #search{
+        float: left; 
+        margin: 0;
+
+      }
+     #msgEmpty{
+        width: 100%;
+        text-align: center;
+      }
+      #paramSearch{
+        margin: 0;
+        width: 100%;
+      }
+     #infinite {
+      --default-primary-color: rgb(209,209,209);
+      font-family: 'Roboto', 'Noto', sans-serif;
+      --iron-data-table-header: {
+        background-color: rgb(208,209,209);
+        color: black;
+        font-size: 1.2em;
+        font-weight: 400;
+      }
+      #deleteUser{
+        margin: 0;
+      }
+      iron-data-table {
+        height:500px!important;
+        width: 100%;
+      }
+      --iron-data-table-row: {
+        height: 60px;
+        align-items: center;
+      }
+      --iron-data-table-row-odd: {
+        background-color: #fff;
+      }
+      --iron-data-table-row-even: {
+        background-color: #fafafa;
+      }
+      --iron-data-table-row-hover: {
+        background-color: #eee !important;
+      }
+      --iron-data-table-row-selected: {
+        background-color: var(--default-primary-color) !important;
+        color: #fff;
+      }
+      --iron-data-table-row-after: {
+        background-color: #fff;
+        bottom: 16px;
+        content: "";
+        height: 2px;
+        left: 13px;
+        pointer-events: none;
+        position: absolute;
+        right: 0px;
+        transition: all 1s ease-in-out;
+        -webkit-transform: scaleX(0.0);
+        transform: scaleX(0.0);
+        z-index: 1;
+      }
+    }    
+    </style>
+        <app-location route="{{route}}"></app-location>
+        <app-route id="appRoute"
+        route="{{route}}"
+        pattern="/:page"
+        data="{{routeData}}"
+        tail="{{subroute}}"></app-route>
+        <paper-spinner active="[[cargando]]"></paper-spinner>
+                <paper-fab style="{{styleDelete}}" id="deleteUser" icon="{{iconValue}}"></paper-fab>
+        <paper-input placeholder="Buscar usuario" type="search" id="paramSearch">
+                     <iron-icon icon="search" prefix></iron-icon>
+        </paper-input>
+        <template is="dom-bind">
+            <iron-ajax auto id="idAjaxUsers" url="http://192.168.1.7:9260/usuarios" loading="{{cargando}}"  last-response="{{data}}" method="GET"></iron-ajax>
+            <iron-data-table  id="infinite" items="{{data.data}}" selection-enabled multi-selection>
+                <data-table-column width="50px" flex="0">
+                </data-table-column>
+                <data-table-column name="Nombre">
+                    <template>[[item.userName]]</template>
+                </data-table-column>
+                <data-table-column name="Apellido">
+                    <template>[[item.userLastName]]</template>
+                </data-table-column>
+                <data-table-column name="Usuario">
+                    <template>[[item.userLog]]</template>
+                </data-table-column>
+                <data-table-column name="Rol">
+                    <template>[[item.userNivAdm]]</template>
+                </data-table-column>
+            </iron-data-table>
+        </template>
+        <div id="msgEmpty" style="{{styleMsg}}">
+                <label>No se encontraron registros</label>
+        </div>
+        <iron-ajax id="idAjaxSearchUser" url="http://192.168.1.7:9260/usuariosfind" loading="{{cargando}}" handle-as="json"  on-response="_responseSearch" method="get" on-error="_errorResponseSearch"></iron-ajax>
+        <iron-ajax id="idAjaxNewUser" url="http://192.168.1.7:9260/usuarios" loading="{{cargando}}"  on-response="_response" method="post" on-error="_errorResponse" handle-as="json" content-type="application/json"></iron-ajax>
+         <iron-ajax id="idAjaxDelUser" url="http://192.168.1.7:9260/usuarios/{{user.userId}}" loading="{{cargando}}"  on-response="_responseDelete" method="delete"></iron-ajax>
+        <iron-ajax id="idAjaxModifyUser" url="http://192.168.1.7:9260/usuarios/{{user.userId}}" on-error="_errorModify" loading="{{cargando}}"  on-response="_responseModify" method="put" handle-as="json" content-type="application/json"></iron-ajax>
+        <iron-ajax id="idAjaxUsersReload" url="http://192.168.1.7:9260/usuarios" loading="{{cargando}}"  on-response="_responseReload" method="GET"></iron-ajax>
+            <paper-fab id="addUser" icon="{{valueIcon}}" class="add"></paper-fab>
+            <paper-toast id="toastSucess" class="toastStyle" text="El registro de usuario se ha realizado correctamente" duration="2000"></paper-toast>
+            <paper-toast id="toastErrMod" class="toastStyle" text="El nombre de usuario ya se encuentra asociado a otro usuario" duration="2000"></paper-toast>
+            <paper-toast id="toastDelete" class="toastStyle" text="Ha eliminado al usuario correctamente" duration="2000"></paper-toast>
+            <paper-toast id="toastModify" class="toastStyle" text="Ha modificado al usuario satisfactoriamente"></paper-toast>
+            <paper-dialog id="dialogNewUser">
+              <h2>{{titleDialog}}</h2>
+              <paper-dialog-scrollable>
+               <div>
+                <form is="iron-form" id="formUser">
+                    <div class="card-content">
+                        <paper-input id="userName" required name="userName" label="Nombre" pattern="[A-Za-z]{3,40}" error-message="campo vacio">
+                        </paper-input>
+                        <paper-input id="userLastName" required name="userLastName" label="Apellido" pattern="[A-Za-z]{3,40}" error-message="campo vacio">
+                        </paper-input>
+                        <paper-input id="userLogin" required name="userLogin" label="Usuario" pattern="[a-z0-9]{3,40}" error-message="campo vacio">
+                        </paper-input>
+                        <paper-input id="userPas" required name="userPas" label="Contraseña" type="password"  pattern="[a-z0-9]{3,40}" error-message="campo vacio"></paper-input> 
+                        <paper-input id="passwordConfirm" required name="password" label="Confirmar Contraseña" type="password"  pattern="[a-z0-9]{3,40}" error-message="campo vacio"></paper-input>
+                        <div on-tap="show" id="cmb">
+                        <paper-button>{{valueCombo}}</paper-button>
+                            <iron-dropdown id="showMenu" horizontal-align="right" vertical-align="top">
+                                <div class="dropdown-content">
+                                    <paper-button id="itemDig">Digitalizador</paper-button>
+                                    <paper-button id="itemAdm">Administrador</paper-button>  
+                                </div>
+                            </iron-dropdown>
+                        </div>
+                    <div class="buttons">
+                        <paper-button id="saveUser"  on-click="_response">Aceptar</paper-button>
+                        <paper-button dialog-dismiss on-click="clearInputs">Cancelar</paper-button>
+                    </div>
+                </form>
+               </div>
+              </paper-dialog-scrollable>
+              <paper-toast id="toastErrMod" text="El nombre de usuario ingresado, ya existe para otro usuario, no se realizó el registro correspondiente."></paper-toast>
+        </paper-dialog>
+        <paper-toast id="noMatch" class="toastStyle" text="Las contraseñas no coinciden" duration="2000"></paper-toast>
+    </template>
+
+  <script>
+    Polymer({
+        is: 'my-users'
+        ,
+        properties : {
+           valueIcon : {
+                type: String,
+                value: "add"
+            },
+            valueCombo : {
+                type: String,
+                value: "Digitalizador"
+            },
+            iconValue : {
+                type: String,
+                value: ""   
+            },
+            route: {
+                type: Object,
+                notify:true
+            },
+            datos: {
+                type: Object,
+                notify:true,
+                value: function() {
+                    return {
+                        page: 'users'
+                    };
+                }
+            },
+            user : {
+                type : Object
+            },
+            userLoged : {
+              type : Object
+            }
+            ,
+            titleDialog : {
+                type : String,
+                value : ""
+            },
+            data : {
+                type : Array
+            },
+            styleMsg : {
+                type : String,
+                value : "display:none"
+            },
+            styleDelete : {
+                type : String,
+                value : "display:none"              
+            }
+        }, 
+        observers: ['_onRoutePathChanged(route.path)'],
+        /**
+         * Verifica si el path ha cambiado para redireccionar
+         * @param  {string}
+         */
+        _onRoutePathChanged: function(path) {
+            if (!path) {
+                this.set('route.path', 'users');
+            }else if(path != this.datos.page){
+                this.set('datos.page', path);
+            }
+        },
+        /**
+            Obtiene los items actualizados luego de haber insertado,
+            modificado ó eliminado algún usuario.
+            @param {event,request}
+        */
+        _responseReload : function(event,request){
+          var table = Polymer.dom(this.root).querySelector('iron-data-table');
+          table.items = request.response.data;
+          table.clearSelection();
+          this.$.paramSearch.value = "";
+        },
+
+        /**
+            Muestra un mensaje de error cuando el usuario al momento de
+            modificar busca guardar un usuario existente en la base de datos.
+            @param {event}
+        */
+        _errorModify : function(event){
+            if(event.detail.request.xhr.response.errors == 400){
+                this.$.toastErrMod.open();
+            }
+
+        }, 
+
+        /**
+            Cierra el dialogo donse se modificó al usuario,
+            mustra mensaje satisfactorio y llama al request 
+            para consultar la información actualizada.
+            @param {event,request}
+        */
+        _responseModify : function(event,request){
+            this.$.dialogNewUser.close();
+            this.$.toastModify.show();
+            this.$.idAjaxUsersReload.generateRequest(); 
+        },
+
+        /**
+            Muestra el mensaje como eliminó al usuario correctamente 
+            y obtiene el listado de usuarios actualizados.
+            @param {event,request}
+        */
+        _responseDelete : function(event,request){
+            this.$.toastDelete.show();
+            this.$.idAjaxUsersReload.generateRequest();
+        },
+
+        /**
+            limpia los campos del dialogo al momento de darle click
+            al boton cancelar en el diálogo.
+        */
+        clearInputs : function(){
+            this.$.userName.value = ""; 
+            this.$.userLastName.value ="";  
+            this.$.userLogin.value =""; 
+            this.$.userPas.value ="";
+            this.$.passwordConfirm.value = "";
+        },
+
+        /**
+            Muestra el combo con los roles en el diálogo.
+        */
+        show : function() {
+            this.$.showMenu.toggle();
+        },
+
+        /**
+            Cierra el diálogo donde se ingresaron los datos del usuario nuevo,
+            consulta la información actualizada de los usuarios y 
+            muestra mensaje como fué agregado correctamente el usuario.
+            @param {event,request}
+        */
+        _response : function(event,response){
+            this.$.dialogNewUser.close(); 
+            this.$.idAjaxUsersReload.generateRequest();     
+             this.$.toastSucess.show();           
+        },
+        /**
+            Muestra mensaje de error cuando el nombre de usuario
+            ingresado ya existe para otro usuario.
+            @param {evt}
+        */
+        _errorResponse : function(evt){
+            if(evt.detail.request.xhr.response.errors == 401){
+                this.$.toast.open();
+            }
+        },
+        /**
+            Obtiene la información de la busqueda del usuario
+            y se le asigna a la tabla.
+                        @param {event,request}
+        */
+        _responseSearch : function(event,request){
+          var table = Polymer.dom(this.root).querySelector('iron-data-table');
+            if(request.response.data.length > 0){
+              table.items = request.response.data;
+                this.styleMsg = "display:none";
+            }
+
+        },
+        /**
+            Muestra mensaje "No existen usuarios" cuando la busqueda no coincide con 
+            la información almacenada en base de datos.
+            @param {evt}
+        */
+        _errorResponseSearch : function(evt){
+            if(evt.detail.request.xhr.response.errors == 412){
+                var table = Polymer.dom(this.root).querySelector('iron-data-table');
+                table.items = [{}];
+                this.styleMsg = "";
+            }
+
+        },
+        ready : function(){
+              var table = Polymer.dom(this.root).querySelector('iron-data-table');
+
+            /**
+                Metodo que se ejecuta cuando el usuario teclea en el campo de busqueda.
+                Ejecuta el Ajax para realizar la busqueda. 
+                @param {evt}
+            */
+            this.$.paramSearch.addEventListener("keyup",(evt)=>{
+                this.$.idAjaxSearchUser.params.search = this.$.paramSearch.value;
+                this.$.idAjaxSearchUser.generateRequest();
+            });
+            
+            /**
+            Metodo que se activa cuando se elimina un usuario.
+            Ejecuta el ajax para la eliminación.
+            */
+            this.$.deleteUser.addEventListener("click",()=>{
+                this.$.idAjaxDelUser.generateRequest();
+
+            });
+
+            /**
+                Guarda los datos del nuevo usuario en base de datos.
+            */
+            this.$.saveUser.addEventListener("click",()=>{
+            this.$.formUser.submit();   
+            if(this.$.userPas.value != this.$.passwordConfirm.value){
+                this.$.noMatch.toggle();
+            }
+            else{  
+                var idValueCombo = null;
+                if(this.valueCombo == "Administrador"){
+                    idValueCombo = "1"
+                }
+                else if(this.valueCombo == "Digitalizador"){
+                    idValueCombo = "0"
+                }
+
+                if(this.valueIcon == "create"){
+                    this.$.idAjaxModifyUser.body = {
+                        userName : this.$.userName.value,
+                        userLastName : this.$.userLastName.value,
+                        userLog : this.$.userLogin.value,
+                        userPas : this.$.userPas.value,
+                        userNivAdm : idValueCombo  
+                    }
+                    if(this.$.userName.value != "" && this.$.userLastName.value !=""
+                        && this.$.userLastName.value !="" && this.$.userLogin.value != "" 
+                        && this.$.userPas.value !="" && this.$.passwordConfirm.value !=""){
+                          this.valueIcon = "add";
+                        this.$.idAjaxModifyUser.generateRequest(); 
+                    }
+                }
+                else if(this.valueIcon == "add"){
+                    this.$.idAjaxNewUser.body = {
+                        userName : this.$.userName.value,
+                        userLastName : this.$.userLastName.value,
+                        userLog : this.$.userLogin.value,
+                        userPas : this.$.userPas.value,
+                        userNivAdm : idValueCombo
+                    }
+                    if(this.$.userName.value != "" && this.$.userLastName.value !=""
+                        && this.$.userLastName.value !="" && this.$.userLogin.value != "" 
+                        && this.$.userPas.value !="" && this.$.passwordConfirm.value !=""){
+                        this.$.idAjaxNewUser.generateRequest(); 
+                    }
+                }
+            
+            }  
+        });
+
+            /**
+                Muestra el diálogo donde se registra o modifica al usuario.
+            */
+            this.$.addUser.addEventListener("click",()=>{
+             if(this.$.addUser.icon == "add"){
+                this.titleDialog = "Registrar usuario";
+                this.$.userName.value = ""; 
+                this.$.userLastName.value ="";  
+                this.$.userLogin.value =""; 
+                this.$.userPas.value ="";
+                this.$.passwordConfirm.value = "";
+                this.$.dialogNewUser.toggle();
+             }else if(this.$.addUser.icon == "create"){
+                this.titleDialog = "Modificar usuario"
+                this.$.userName.value = this.user.userName; 
+                this.$.userLastName.value =this.user.userLastName;  
+                this.$.userLogin.value =this.user.userLog; 
+                this.$.userPas.value =this.user.userPas;
+                this.$.passwordConfirm.value = this.user.userPas;
+                this.valueCombo = this.user.userNivAdm;
+                this.$.dialogNewUser.toggle();
+             }
+            });
+
+            /**
+                Asigna el valor Administrador al combo Rol
+            */
+            this.$.itemAdm.addEventListener("click",()=>{
+                this.valueCombo = "Administrador";
+            });
+
+            /**
+                Asigna el valor Digitalizador al combo Rol
+            */
+            this.$.itemDig.addEventListener("click",()=>{
+                this.valueCombo = "Digitalizador";
+            });
+
+            /**
+                Evento que se ejecuta cuando se deselecciona 
+                un usuario a traves del checkbox.
+                @param {e}
+            */
+            table.addEventListener('selecting-item',(e) =>{
+            e.preventDefault(); 
+            table.clearSelection();
+            table.selectItem(e.detail.item);
+            this.user = e.detail.item;
+            this.valueIcon ="create";
+            this.iconValue = "delete";
+            this.styleDelete = ""
+
+        });  
+
+            /**
+                Evento que se ejecuta cuando se 
+                selecciona 
+                un usuario a traves del checkbox.
+                @param {e}
+            */
+           table.addEventListener('deselecting-item', (e) => {
+            this.valueIcon ="add";
+            this.iconValue = "";
+            this.styleDelete = "display:none";
+              if (table.selectedItems.length > 1 || table.selectedItems[0] !== e.detail.item) {
+                e.preventDefault();
+                table.clearSelection();
+                table.selectItem(e.detail.item);
+              }
+            });  
+        }
+
+    });
+  </script>
+</dom-module>

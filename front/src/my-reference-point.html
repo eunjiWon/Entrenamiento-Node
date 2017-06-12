@@ -1,0 +1,109 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/leaflet-map/leaflet-map.html">
+<link rel="import" href="../bower_components/iron-dropdown/iron-dropdown.html">
+
+
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="my-reference-point">
+  <template>
+    <style>
+      html, body {
+        margin: 0;
+        height: 100%;
+      }
+      leaflet-map {
+        height: 100%;
+      }
+    #showMenu{
+        background: rgba(0,128,0,1);
+        width: 15%;
+        height: 100px;
+        background-color: red;
+      }
+      #cmb{
+        background-color: gray;
+        display: inline;
+                cursor: pointer;
+      }
+      #panel{
+        width: 35%;
+        background-color: blue;
+        float: right;
+        text-align: center;
+      }
+      #cmb paper-button{
+        width: 49%;
+
+      }
+      label{
+        display: block;
+      }
+    </style>
+    <iron-ajax auto id="idAjaxEstados" url="http://192.168.1.7:9260/estados" loading="{{cargando}}" handle-as="json"  on-response="_responseEstados" method="get"></iron-ajax>
+    <div id="panel">
+            <label>Estado:</label>
+            <div on-tap="showState" id="cmb">
+        <paper-button>{{valueCombo}}</paper-button>
+        <iron-dropdown id="showMenu" horizontal-align="right" vertical-align="top">
+            <div class="dropdown-content">
+                <template is="dom-repeat" items="{{estados}}">
+                    <div id="{{item.stateCod}}" on-tap="selectItem">{{item.stateName}}</div>
+                </template>
+            </div>
+        </iron-dropdown>
+    </div>
+    </div>
+  </template>
+
+  <script>
+    Polymer({
+        is: 'my-reference-point',
+        properties : {
+            estados : {
+                type : Object
+            },
+            valueCombo : {
+                type : String,
+                value : "--Sin Selección--"
+            }
+        },
+        ready : function(){
+      //  L.Icon.Default.imagePath = '../bower_components/leaflet/dist/images';
+      },
+        showState : function() {
+            this.$.showMenu.toggle();
+
+        },
+        _responseEstados : function(event,request){
+            this.estados = request.response.data;
+            /*
+        _responseReload : function(event,request){
+          var table = Polymer.dom(this.root).querySelector('iron-data-table');
+          table.items = request.response.data;
+          table.clearSelection();
+          this.$.paramSearch.value = "";
+        },
+
+
+            */
+        },
+        selectItem : function(item,objeto){
+            this.valueCombo = item;
+            console.log("item seleccionado");
+            console.log(item);
+            console.log(objeto);
+        }
+    });
+  </script>
+</dom-module>
